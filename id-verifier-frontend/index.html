@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清朝笔记本测试 Go 和 Java 并发效果</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="app-shell">
+        <section class="control-strip" aria-label="实验控制">
+            <button class="primary-action" id="generateBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg>
+                生成 1000 万测试数据
+            </button>
+            <button class="secondary-action" id="runBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                同时启动 Go / Java 分析
+            </button>
+            <button class="ghost-action" id="resetBtn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v6h6"/></svg>
+                重置演示
+            </button>
+            <div class="run-config">
+                <span>数据量 <strong>10,000,000</strong></span>
+                <span>线程数 <strong>8</strong></span>
+                <span>模式 <strong>生成 + 分析</strong></span>
+            </div>
+        </section>
+
+        <section class="summary-grid" aria-label="总览指标">
+            <article class="metric-card">
+                <span class="metric-label">测试数据</span>
+                <strong id="totalRecords">0</strong>
+                <small id="dataState">等待生成</small>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">有效身份证</span>
+                <strong id="validRecords">0</strong>
+                <small>校验码、出生日期均通过</small>
+            </article>
+            <article class="metric-card">
+                <span class="metric-label">男性 / 女性</span>
+                <strong id="genderSplit">-</strong>
+                <small>从顺序码第 17 位推断</small>
+            </article>
+            <article class="metric-card winner-card">
+                <span class="metric-label">当前领先</span>
+                <strong id="winnerText">未开始</strong>
+                <small id="winnerDetail">等待两端服务分析</small>
+            </article>
+        </section>
+
+        <section class="race-board" aria-label="Go 与 Java 对比">
+            <article class="engine-panel java-panel">
+                <div class="engine-head">
+                    <div>
+                        <span class="engine-tag">Java Engine</span>
+                        <h2>Java 身份证分析服务</h2>
+                    </div>
+                    <span class="port">:8091</span>
+                </div>
+                <div class="progress-area">
+                    <div class="progress-label">
+                        <span>分析进度</span>
+                        <strong id="javaPercent">0.0%</strong>
+                    </div>
+                    <div class="progress-track"><div class="progress-fill java-fill" id="javaBar"></div></div>
+                    <span class="processed" id="javaProcessed">0 / 10,000,000</span>
+                </div>
+                <div class="engine-stats">
+                    <div><span>耗时</span><strong id="javaTime">0.00s</strong></div>
+                    <div><span>吞吐量</span><strong id="javaSpeed">0/s</strong></div>
+                    <div><span>无效数</span><strong id="javaInvalid">0</strong></div>
+                </div>
+            </article>
+
+            <div class="versus">
+                <span>VS</span>
+                <small>same data</small>
+            </div>
+
+            <article class="engine-panel go-panel">
+                <div class="engine-head">
+                    <div>
+                        <span class="engine-tag">Go Engine</span>
+                        <h2>Go 身份证分析服务</h2>
+                    </div>
+                    <span class="port">:8090</span>
+                </div>
+                <div class="progress-area">
+                    <div class="progress-label">
+                        <span>分析进度</span>
+                        <strong id="goPercent">0.0%</strong>
+                    </div>
+                    <div class="progress-track"><div class="progress-fill go-fill" id="goBar"></div></div>
+                    <span class="processed" id="goProcessed">0 / 10,000,000</span>
+                </div>
+                <div class="engine-stats">
+                    <div><span>耗时</span><strong id="goTime">0.00s</strong></div>
+                    <div><span>吞吐量</span><strong id="goSpeed">0/s</strong></div>
+                    <div><span>无效数</span><strong id="goInvalid">0</strong></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="analytics-grid" aria-label="统计分析">
+            <article class="chart-panel">
+                <div class="panel-title">
+                    <h3>性别分析</h3>
+                    <span>Gender distribution</span>
+                </div>
+                <div class="donut-wrap">
+                    <div class="donut" id="genderDonut"></div>
+                    <div class="legend">
+                        <span><i class="male"></i>男性 <strong id="maleCount">0</strong></span>
+                        <span><i class="female"></i>女性 <strong id="femaleCount">0</strong></span>
+                    </div>
+                </div>
+            </article>
+            <article class="chart-panel wide">
+                <div class="panel-title">
+                    <h3>年龄段分布</h3>
+                    <span>Age buckets from birth date</span>
+                </div>
+                <div class="bars" id="ageBars"></div>
+            </article>
+            <article class="chart-panel">
+                <div class="panel-title">
+                    <h3>校验失败原因</h3>
+                    <span>Invalid reason ranking</span>
+                </div>
+                <div class="reason-list" id="reasonList"></div>
+            </article>
+        </section>
+
+        <section class="table-panel" aria-label="身份证明细">
+            <div class="table-head">
+                <div>
+                    <h3>分程序完整数据浏览器</h3>
+                    <p>Go 从 Go 的分析结果查看，Java 从 Java 的分析结果查看；两套结果独立分页、筛选和导出。</p>
+                </div>
+                <div class="data-actions">
+                    <button class="outline-action" id="fullDataBtn" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        打开完整数据视图
+                    </button>
+                    <button class="outline-action" id="exportBtn" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+                        导出当前页
+                    </button>
+                </div>
+            </div>
+            <div class="engine-tabs" role="tablist" aria-label="选择程序数据源">
+                <button class="engine-tab active" id="tabGo" type="button" data-engine="go" role="tab" aria-selected="true">
+                    <span>Go 数据视图</span>
+                    <strong>:8090</strong>
+                </button>
+                <button class="engine-tab" id="tabJava" type="button" data-engine="java" role="tab" aria-selected="false">
+                    <span>Java 数据视图</span>
+                    <strong>:8091</strong>
+                </button>
+            </div>
+            <div class="engine-view-note" id="engineViewNote">
+                当前查看 Go 服务分析后的完整身份证数据。
+            </div>
+            <div class="data-toolbar">
+                <label>
+                    搜索身份证
+                    <input id="searchInput" type="search" placeholder="输入完整或部分身份证号">
+                </label>
+                <label>
+                    性别
+                    <select id="genderFilter">
+                        <option value="all">全部</option>
+                        <option value="男">男性</option>
+                        <option value="女">女性</option>
+                    </select>
+                </label>
+                <label>
+                    校验状态
+                    <select id="validFilter">
+                        <option value="all">全部</option>
+                        <option value="通过">通过</option>
+                        <option value="失败">失败</option>
+                    </select>
+                </label>
+                <label>
+                    每页
+                    <select id="pageSize">
+                        <option value="25">25 条</option>
+                        <option value="50" selected>50 条</option>
+                        <option value="100">100 条</option>
+                    </select>
+                </label>
+                <label>
+                    跳转页
+                    <input id="pageInput" type="number" min="1" value="1">
+                </label>
+                <button class="apply-action" id="applyDataBtn" type="button">查看</button>
+            </div>
+            <div class="dataset-strip">
+                <span>当前程序 <strong id="activeEngineLabel">Go</strong></span>
+                <span>全量记录 <strong>10,000,000</strong></span>
+                <span>当前命中 <strong id="visibleTotal">10,000,000</strong></span>
+                <span>当前页 <strong id="pageState">1 / 200,000</strong></span>
+                <span id="exportState">可导出当前页 CSV</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>身份证号</th>
+                            <th>出生日期</th>
+                            <th>年龄</th>
+                            <th>性别</th>
+                            <th>地区码</th>
+                            <th>校验</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordRows"></tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div class="pager-buttons">
+                    <button id="prevPage" type="button">上一页</button>
+                    <button id="nextPage" type="button">下一页</button>
+                </div>
+                <span id="pageNote">当前展示第 1-50 条，代表全量 10,000,000 条可分页查看。</span>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
