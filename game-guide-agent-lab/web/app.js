@@ -1,4 +1,5 @@
 const form = document.querySelector('#guide-form');
+const settingsForm = document.querySelector('#settings-form');
 const agentsEl = document.querySelector('#agents');
 const workflowEl = document.querySelector('#workflow');
 const guideEl = document.querySelector('#guide');
@@ -20,7 +21,10 @@ const sample = {
 };
 
 function formDataToObject() {
-  return Object.fromEntries(new FormData(form).entries());
+  return {
+    ...Object.fromEntries(new FormData(form).entries()),
+    apiKey: new FormData(settingsForm).get('apiKey')
+  };
 }
 
 function renderAgents(agents = []) {
@@ -109,7 +113,12 @@ function escapeHtml(value) {
 
 sampleButton.addEventListener('click', () => {
   for (const [key, value] of Object.entries(sample)) {
-    form.elements[key].value = value;
+    if (settingsForm.elements[key]) {
+      settingsForm.elements[key].value = value;
+    }
+    if (form.elements[key]) {
+      form.elements[key].value = value;
+    }
   }
 });
 

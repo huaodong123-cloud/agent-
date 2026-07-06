@@ -17,11 +17,24 @@
           <span class="model-pill">deepseek-v4</span>
         </header>
 
+        <details class="settings-panel" open>
+          <summary>
+            <span>设置</span>
+            <span class="settings-hint">API Key / 模型</span>
+          </summary>
+          <form id="settings-form" class="settings-form">
+            <label>
+              DeepSeek API Key
+              <input name="apiKey" type="password" autocomplete="off" placeholder="仅本次会话使用，不保存">
+            </label>
+            <label>
+              模型
+              <input name="model" value="deepseek-v4" disabled>
+            </label>
+          </form>
+        </details>
+
         <form id="guide-form" class="input-grid">
-          <label>
-            API Key
-            <input name="apiKey" type="password" autocomplete="off" placeholder="本次会话输入，不落盘">
-          </label>
           <label>
             游戏
             <input name="gameName" placeholder="例如：Example RPG">
