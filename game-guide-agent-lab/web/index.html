@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Game Guide Agent Lab</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="side-tool" aria-label="Game guide side tool">
+        <header class="tool-header">
+          <div>
+            <p class="eyebrow">Multi-Agent Harness</p>
+            <h1>游戏攻略工作台</h1>
+          </div>
+          <span class="model-pill">deepseek-v4</span>
+        </header>
+
+        <form id="guide-form" class="input-grid">
+          <label>
+            API Key
+            <input name="apiKey" type="password" autocomplete="off" placeholder="本次会话输入，不落盘">
+          </label>
+          <label>
+            游戏
+            <input name="gameName" placeholder="例如：Example RPG">
+          </label>
+          <label>
+            当前进度
+            <input name="progress" placeholder="例如：Level 42 / 第五章">
+          </label>
+          <label>
+            现有资源
+            <textarea name="resources" rows="2" placeholder="角色、装备、材料、每日时间"></textarea>
+          </label>
+          <label>
+            卡点
+            <textarea name="stuckPoint" rows="2" placeholder="打不过 Boss / 不知道练什么 / 路线混乱"></textarea>
+          </label>
+          <label>
+            目标
+            <input name="target" placeholder="例如：本周通关这个 Boss">
+          </label>
+
+          <div class="actions">
+            <button type="button" id="sample-button">样例</button>
+            <button type="reset">清空</button>
+            <button type="submit" class="primary">开始规划</button>
+          </div>
+        </form>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Agents</h2>
+            <span id="run-status">idle</span>
+          </div>
+          <div id="agents" class="agent-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Workflow</h2>
+          </div>
+          <ol id="workflow" class="timeline"></ol>
+        </section>
+
+        <section class="panel result-panel">
+          <div class="section-title">
+            <h2>攻略</h2>
+            <button type="button" id="copy-button">复制</button>
+          </div>
+          <article id="guide" class="guide-output empty">等待一次规划运行。</article>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <h2>Harness</h2>
+            <strong id="score">--</strong>
+          </div>
+          <ul id="issues" class="issue-list"></ul>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "game-guide-agent-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test server/test/*.test.js",
+    "start": "node server/src/server.js"
+  }
+}
